@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>noVNC Viewer</title>
+    <style>
+        .vnc-iframe {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 70%;
+            height: 70%;
+            border: none;
+            z-index: 1000;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <iframe 
+        class="vnc-iframe"
+        src="http://127.0.0.1:5002/vnc.html?resize=scale"
+        allow="clipboard-read; clipboard-write"
+    ></iframe>
+</body>
+</html>
