@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Set default resolution if not provided
-RESOLUTION=${RESOLUTION:-1200x800x24}
+RESOLUTION=${RESOLUTION:-1920x1080x24}
 
 # Extract width, height and depth from resolution
 WIDTH=$(echo $RESOLUTION | cut -d'x' -f1)
