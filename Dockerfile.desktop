@@ -6,6 +6,7 @@ RUN apk add --no-cache \
     x11vnc \
     supervisor \
     websockify \
+    chromium \
     bash \
     curl \
     ffmpeg \
@@ -16,6 +17,13 @@ RUN apk add --no-cache \
     dbus \
     dbus-x11
 
+# Modify Chromium desktop entry to always use --no-sandbox
+RUN sed -i 's|^Exec=.*|Exec=/usr/bin/chromium-browser --no-sandbox --test-type --password-store=basic|' /usr/share/applications/chromium.desktop
+
+# Create Desktop directory and copy Chromium shortcut
+RUN mkdir -p /root/Desktop && \
+    cp /usr/share/applications/chromium.desktop /root/Desktop/
+
 # Create supervisor config directory
 RUN mkdir -p /etc/supervisor.d
 
@@ -25,6 +33,8 @@ RUN cp -r /usr/share/novnc/vnc.html /usr/share/novnc/index.html
 
 # Copy supervisor config
 COPY desktop-supervisord.conf /etc/supervisor.d/supervisord.ini
+
+COPY desktop_files /root/desktop_files
 
 # Copy start script and make it executable
 COPY start.sh /start.sh
