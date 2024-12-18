@@ -13,7 +13,21 @@ RUN apk add --no-cache \
     ffmpeg \
     python3 \
     py3-pip \
-    aws-cli
+    aws-cli \
+    python3-dev \
+    py3-virtualenv \
+    xdotool
+
+# Create and activate virtual environment
+ENV VIRTUAL_ENV=/opt/venv
+RUN python3 -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+# Install Python packages in virtual environment
+RUN pip3 install --no-cache-dir \
+    fastapi \
+    uvicorn \
+    python-multipart
 
 # Create supervisor config directory
 RUN mkdir -p /etc/supervisor.d
@@ -23,13 +37,16 @@ COPY noVNC /usr/share/novnc
 RUN cp -r /usr/share/novnc/vnc.html /usr/share/novnc/index.html
 
 # Copy supervisor config
-COPY supervisord.conf /etc/supervisor.d/supervisord.ini
+COPY chromium-supervisord.conf /etc/supervisor.d/supervisord.ini
 
 # Copy start script and make it executable
 COPY start.sh /start.sh
 RUN chmod +x /start.sh
 
-# Expose both VNC and noVNC ports
-EXPOSE 5900 6081 9222
+# Add computer_use_server directory
+COPY computer_use_server /computer_use_server
+
+# Expose both VNC, noVNC, API and Chrome debug ports
+EXPOSE 5900 6081 9222 8000
 
 CMD ["/start.sh"]
