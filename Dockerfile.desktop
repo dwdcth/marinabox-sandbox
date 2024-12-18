@@ -10,19 +10,30 @@ RUN apk add --no-cache \
     bash \
     curl \
     ffmpeg \
+    imagemagick \
     python3 \
     py3-pip \
     xfce4 \
     xfce4-terminal \
     dbus \
-    dbus-x11
+    dbus-x11 \
+    python3-dev \
+    py3-virtualenv \
+    xdotool
+
+# Create and activate virtual environment
+ENV VIRTUAL_ENV=/opt/venv
+RUN python3 -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+# Install Python packages in virtual environment
+RUN pip3 install --no-cache-dir \
+    fastapi \
+    uvicorn \
+    python-multipart
 
 # Modify Chromium desktop entry to always use --no-sandbox
-RUN sed -i 's|^Exec=.*|Exec=/usr/bin/chromium-browser --no-sandbox --test-type --password-store=basic|' /usr/share/applications/chromium.desktop
-
-# Create Desktop directory and copy Chromium shortcut
-RUN mkdir -p /root/Desktop && \
-    cp /usr/share/applications/chromium.desktop /root/Desktop/
+RUN sed -i 's|^Exec=.*|Exec=/usr/bin/chromium-browser --no-sandbox  --ignore-certificate-errors --test-type --password-store=basic|' /usr/share/applications/chromium.desktop
 
 # Create supervisor config directory
 RUN mkdir -p /etc/supervisor.d
@@ -36,11 +47,14 @@ COPY desktop-supervisord.conf /etc/supervisor.d/supervisord.ini
 
 COPY desktop_files /root/desktop_files
 
+# Add computer_use_server directory
+COPY computer_use_server /computer_use_server
+
 # Copy start script and make it executable
 COPY start.sh /start.sh
 RUN chmod +x /start.sh
 
-# Expose VNC and noVNC ports
-EXPOSE 5900 6081
+# Expose VNC, noVNC, and API ports
+EXPOSE 5900 6081 8000
 
 CMD ["/start.sh"]

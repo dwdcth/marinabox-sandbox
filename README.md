@@ -29,4 +29,4 @@ docker build -f Dockerfile.desktop -t marinabox-desktop .
 docker run -d -p 9222:9222 -e RESOLUTION=1920x1080x24 chromium-browser
 
 # Run Alpine desktop container
-docker run -d -p 5900:5900 -p 6081:6081 -e RESOLUTION=1920x1080x24 alpine-desktop
+docker run -d -p 5900:5900 -p 6081:6081 -p 8000:8000 -e RESOLUTION=1280x800x24 marinabox-desktop
