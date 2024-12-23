@@ -29,13 +29,11 @@ MarinaBox sandboxes are isolated environments that can be controlled remotely. E
 ## Building Images
 
 ### Browser Sandbox
-```bash
-cd browser
-docker build -t marinabox-browser .
+```
+docker build -f Dockerfile.chromium -t marinabox-browser .
 ```
 
 ### Desktop Sandbox
-```bash
-cd desktop
-docker build -t marinabox-desktop .
+```
+docker build -f Dockerfile.desktop -t marinabox-desktop .
 ```

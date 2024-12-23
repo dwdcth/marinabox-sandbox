@@ -10,6 +10,7 @@ from enum import Enum
 from pathlib import Path
 from uuid import uuid4
 import logging
+from collections import defaultdict
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -18,6 +19,19 @@ logger = logging.getLogger(__name__)
 class InputRequest(BaseModel):
     text: Optional[str] = None
     coordinate: Optional[List[int]] = None
+
+class EditRequest(BaseModel):
+    command: Literal["view", "create", "str_replace", "insert", "undo_edit"]
+    path: str
+    file_text: Optional[str] = None
+    view_range: Optional[List[int]] = None
+    old_str: Optional[str] = None
+    new_str: Optional[str] = None
+    insert_line: Optional[int] = None
+
+class BashRequest(BaseModel):
+    command: Optional[str] = None
+    restart: bool = False
 
 app = FastAPI()
 
@@ -28,6 +42,9 @@ DISPLAY_ENV = {"DISPLAY": f":{DISPLAY_NUM}"}
 OUTPUT_DIR = "/tmp/outputs"
 TYPING_DELAY_MS = 12
 TYPING_GROUP_SIZE = 50
+
+# Global file history for edit tool
+file_history = defaultdict(list)
 
 class Action(str, Enum):
     KEY = "key"
@@ -111,4 +128,105 @@ async def handle_input(
 
     except Exception as e:
         logger.error(f"Error handling input: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/edit")
+async def handle_edit(request: EditRequest):
+    try:
+        path = Path(request.path)
+        
+        if request.command == "view":
+            if not path.exists():
+                raise HTTPException(status_code=404, detail=f"Path {path} does not exist")
+            
+            if path.is_dir():
+                result = subprocess.run(
+                    ["find", path, "-maxdepth", "2", "-not", "-path", "*/\\.*"],
+                    capture_output=True,
+                    text=True
+                )
+                return {"output": result.stdout, "error": result.stderr}
+            
+            content = path.read_text()
+            if request.view_range:
+                lines = content.split("\n")
+                start, end = request.view_range
+                content = "\n".join(lines[start-1:end])
+            return {"output": content}
+
+        elif request.command == "create":
+            if path.exists():
+                raise HTTPException(status_code=400, detail=f"File already exists at {path}")
+            if not request.file_text:
+                raise HTTPException(status_code=400, detail="file_text is required")
+            path.write_text(request.file_text)
+            return {"output": f"File created successfully at: {path}"}
+
+        elif request.command == "str_replace":
+            if not request.old_str:
+                raise HTTPException(status_code=400, detail="old_str is required")
+            content = path.read_text()
+            occurrences = content.count(request.old_str)
+            if occurrences == 0:
+                raise HTTPException(status_code=400, detail=f"old_str not found in file")
+            if occurrences > 1:
+                raise HTTPException(status_code=400, detail=f"Multiple occurrences of old_str found")
+            
+            new_content = content.replace(request.old_str, request.new_str or "")
+            file_history[str(path)].append(content)
+            path.write_text(new_content)
+            return {"output": "File edited successfully"}
+
+        elif request.command == "insert":
+            if request.insert_line is None or request.new_str is None:
+                raise HTTPException(status_code=400, detail="insert_line and new_str are required")
+            
+            content = path.read_text()
+            lines = content.split("\n")
+            if request.insert_line < 0 or request.insert_line > len(lines):
+                raise HTTPException(status_code=400, detail="Invalid insert_line")
+            
+            new_lines = lines[:request.insert_line] + request.new_str.split("\n") + lines[request.insert_line:]
+            new_content = "\n".join(new_lines)
+            file_history[str(path)].append(content)
+            path.write_text(new_content)
+            return {"output": "File edited successfully"}
+
+        elif request.command == "undo_edit":
+            if not file_history[str(path)]:
+                raise HTTPException(status_code=400, detail="No edit history found")
+            
+            old_content = file_history[str(path)].pop()
+            path.write_text(old_content)
+            return {"output": "Last edit undone successfully"}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/bash")
+async def handle_bash(request: BashRequest):
+    try:
+        if request.restart:
+            # Kill existing bash processes
+            subprocess.run(["pkill", "bash"], check=False)
+            return {"system": "tool has been restarted"}
+
+        if not request.command:
+            raise HTTPException(status_code=400, detail="command is required")
+
+        # Change to root directory before executing command
+        process = await asyncio.create_subprocess_shell(
+            request.command,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+            cwd="/"  # Set working directory to root
+        )
+        stdout, stderr = await process.communicate()
+        
+        return {
+            "output": stdout.decode() if stdout else None,
+            "error": stderr.decode() if stderr else None
+        }
+
+    except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
