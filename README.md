@@ -1,10 +1,10 @@
 # MarinaBox Sandbox
 
 <p>
-    <img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/marinabox/marinabox-sandbox?style=flat-square">
+    <img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/marinabox/marinabox-sandbox?style=flat-square&logo=github">
     <img alt="GitHub forks" src="https://img.shields.io/github/forks/marinabox/marinabox-sandbox?style=flat-square&logo=github">
-    <img alt="GitHub issues" src="https://img.shields.io/github/issues/marinabox/marinabox-sandbox?style=flat-square">
-    <img alt="GitHub license" src="https://img.shields.io/github/license/marinabox/marinabox-sandbox?style=flat-square">
+    <img alt="GitHub issues" src="https://img.shields.io/github/issues/marinabox/marinabox-sandbox?style=flat-square&logo=github">
+    <img alt="GitHub license" src="https://img.shields.io/github/license/marinabox/marinabox-sandbox?style=flat-square&logo=github">
 </p>
 
 This repository contains the Docker configurations and build files for MarinaBox's sandbox environments. It provides two main sandbox types:
