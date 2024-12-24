@@ -37,3 +37,13 @@ docker build -f Dockerfile.chromium -t marinabox-browser .
 ```
 docker build -f Dockerfile.desktop -t marinabox-desktop .
 ```
+
+## License
+
+MarinaBox Sandbox is released under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+This project makes significant use of:
+- [noVNC](https://github.com/novnc/noVNC), an open source VNC client using HTML5 (WebSockets, Canvas). noVNC is licensed under the MPL-2.0 License.
+- [Anthropic Quickstarts](https://github.com/anthropics/anthropic-quickstarts), specifically the Computer Use Demo which provided inspiration for the sandbox implementation. Licensed under the MIT License.
