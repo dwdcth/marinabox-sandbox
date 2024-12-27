@@ -33,7 +33,7 @@ RUN pip3 install --no-cache-dir \
     python-multipart
 
 # Modify Chromium desktop entry to always use --no-sandbox
-RUN sed -i 's|^Exec=.*|Exec=/usr/bin/chromium-browser --no-sandbox  --ignore-certificate-errors --test-type --password-store=basic|' /usr/share/applications/chromium.desktop
+RUN sed -i 's|^Exec=.*|Exec=/usr/bin/chromium-browser --no-sandbox --remote-allow-origins=* --ignore-certificate-errors --test-type --password-store=basic --disable-web-security --disable-dev-shm-usage|' /usr/share/applications/chromium.desktop
 
 # Create supervisor config directory
 RUN mkdir -p /etc/supervisor.d
