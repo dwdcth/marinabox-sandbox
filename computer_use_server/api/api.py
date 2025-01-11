@@ -86,7 +86,23 @@ async def handle_input(
     request: InputRequest
 ):
     try:
-        if action in [Action.MOUSE_MOVE, Action.LEFT_CLICK_DRAG]:
+        # Log incoming request
+        logger.info(f"Received {action} request with params: {request}")
+        
+        if action == Action.CURSOR_POSITION:
+            cmd = f"{XDOTOOL} getmouselocation --shell"
+            result = subprocess.run(
+                shlex.split(cmd),
+                check=True,
+                env=DISPLAY_ENV,
+                capture_output=True,
+                text=True
+            )
+            # Parse the output which is in format: X=123\nY=456\n...
+            location_data = dict(line.split('=') for line in result.stdout.strip().split('\n'))
+            return {"x": int(location_data['X']), "y": int(location_data['Y'])}
+
+        elif action in [Action.MOUSE_MOVE, Action.LEFT_CLICK_DRAG]:
             if not request.coordinate or len(request.coordinate) != 2:
                 raise HTTPException(status_code=400, detail="Coordinate required")
             x, y = request.coordinate
@@ -95,7 +111,18 @@ async def handle_input(
             else:
                 cmd = f"{XDOTOOL} mousedown 1 mousemove --sync {x} {y} mouseup 1"
             
-            subprocess.run(shlex.split(cmd), check=True, env=DISPLAY_ENV)
+            # Log command being executed
+            logger.info(f"Executing command: {cmd}")
+            result = subprocess.run(
+                shlex.split(cmd), 
+                check=True, 
+                env=DISPLAY_ENV,
+                capture_output=True,
+                text=True
+            )
+            logger.info(f"Command output: {result.stdout}")
+            if result.stderr:
+                logger.warning(f"Command stderr: {result.stderr}")
 
         elif action in [Action.KEY, Action.TYPE]:
             if not request.text:
@@ -126,9 +153,14 @@ async def handle_input(
         
         return {"status": "success"}
 
+    except subprocess.CalledProcessError as e:
+        error_msg = f"Command failed: {e.cmd}\nReturn code: {e.returncode}\nOutput: {e.output}\nError: {e.stderr}"
+        logger.error(error_msg)
+        raise HTTPException(status_code=500, detail=error_msg)
     except Exception as e:
-        logger.error(f"Error handling input: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        error_msg = f"Error handling {action}: {str(e)}\nType: {type(e)}"
+        logger.error(error_msg)
+        raise HTTPException(status_code=500, detail=error_msg)
 
 @app.post("/edit")
 async def handle_edit(request: EditRequest):
