@@ -16,7 +16,23 @@ RUN apk add --no-cache \
     aws-cli \
     python3-dev \
     py3-virtualenv \
-    xdotool
+    xdotool \
+    dbus \
+    mesa-dri-gallium \
+    vulkan-loader \
+    mesa \
+    mesa-gl \
+    mesa-egl \
+    mesa-gles
+
+# Create necessary directories and files
+RUN mkdir -p /tmp/chrome-data && \
+    chmod 777 /tmp/chrome-data && \
+    mkdir -p /var/run/dbus && \
+    mkdir -p /var/log
+
+# Initialize dbus
+RUN dbus-uuidgen > /var/lib/dbus/machine-id
 
 # Create and activate virtual environment
 ENV VIRTUAL_ENV=/opt/venv
