@@ -2,6 +2,7 @@ FROM alpine:3.19
 
 # Install required packages
 RUN apk add --no-cache \
+    font-noto-cjk \
     xvfb \
     x11vnc \
     supervisor \
@@ -24,6 +25,7 @@ RUN apk add --no-cache \
     mesa-gl \
     mesa-egl \
     mesa-gles
+RUN fc-cache -f -v
 
 # Create necessary directories and files
 RUN mkdir -p /tmp/chrome-data && \
