@@ -2,6 +2,7 @@ FROM alpine:3.19
 
 # Install required packages
 RUN apk add --no-cache \
+    font-noto-cjk \
     xvfb \
     x11vnc \
     supervisor \
@@ -20,7 +21,7 @@ RUN apk add --no-cache \
     python3-dev \
     py3-virtualenv \
     xdotool
-
+RUN fc-cache -f -v
 # Create and activate virtual environment
 ENV VIRTUAL_ENV=/opt/venv
 RUN python3 -m venv $VIRTUAL_ENV
